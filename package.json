@@ -1,0 +1,17 @@
+{
+  "name": "mullet db",
+  "version": "0.0.1",
+  "description": "Mullet persistence interface",
+  "author": "Wes Johnson",
+  "dependencies": {
+      "meteor-ejson": "",
+      "underscore": "",
+      "rsvp": ""
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sterlingwes/mullet/issues"
+  },
+  "homepage": "https://github.com/sterlingwes/mullet",
+  "mullet": {}
+}

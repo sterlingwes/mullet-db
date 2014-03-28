@@ -8,7 +8,31 @@ module.exports = function(db__DRIVER) {
     var DB = db__DRIVER
       , schemas = {};
     
+    /*
+     * Schema
+     * 
+     * 
+     */
     function Schema(spec) {
+        this.checkSpec(spec);
+    }
+    
+    Schema.prototype.extendSpec = function(property, value) {
+        var spec = this.spec;
+        if(typeof property === 'string') {
+            var parts = property.split('.');
+            spec = parts.reduce(function(parent, part) {
+                if(!parent[part]) return
+                return parent[part];
+            }, spec);
+            if(!spec)   return console.error(' ! Schema.extendSpec() no %s property to extend', property);
+        }
+        
+        var val = typeof property === 'object' ? property : value || {};
+        _.extend(spec, val);
+    };
+    
+    Schema.prototype.checkSpec = function(spec) {
         this.spec = spec;
         this.syns = _.filter(_.map(spec.fields, function(field, fname) {
             
@@ -23,7 +47,7 @@ module.exports = function(db__DRIVER) {
         this.whitelist = _.without(_.map(spec.fields, function(field, fname) {
             return field.safe ? fname : false;
         }), false);
-    }
+    };
     
     Schema.prototype.getId = function() {
         var bytes,

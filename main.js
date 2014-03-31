@@ -13,8 +13,9 @@ module.exports = function(db__DRIVER) {
      * 
      * 
      */
-    function Schema(spec) {
+    function Schema(spec, useDb) {
         this.checkSpec(spec);
+        this.DB = useDb;
     }
     
     Schema.prototype.extendSpec = function(property, value) {
@@ -156,7 +157,7 @@ module.exports = function(db__DRIVER) {
         // insert object, return promise that evals to new object
         return new RSVP.Promise(function(resolve, reject) {
             var existing = this.id;
-            DB.insert(this.name)(this, function(err, res) {
+            this.DB.insert(this.name)(this, function(err, res) {
                 
                 if(_.isArray(res))  res = res[0];
                 
@@ -167,7 +168,7 @@ module.exports = function(db__DRIVER) {
                     }
                     resolve(this);
                 }
-                if(typeof cb === 'function')    cb(err, this);
+                if(typeof cb === 'function')    cb(err, existing ? res : this);
                 
             }.bind(this));
         }.bind(this));
@@ -183,6 +184,8 @@ module.exports = function(db__DRIVER) {
      */
     function createSchema(name, spec) {
         
+        var useDb = DB(spec.db || 'mullet');
+        
         /*
          * NewSchema - prototype for our new collection
          * 
@@ -196,7 +199,7 @@ module.exports = function(db__DRIVER) {
             
             // if our interface handles the _id itself, do else
             
-            if(!DB.hasId && !val._id)
+            if(!useDb.hasId && !val._id)
                 this.id = this.getId();
             else {
                 this.id = this.fields._id || val._id;
@@ -204,13 +207,12 @@ module.exports = function(db__DRIVER) {
             }
         };
         
-        NewSchema.prototype = new Schema(spec);
+        NewSchema.prototype = new Schema(spec, useDb);
         NewSchema.prototype.name = name;
         
         // define static methods
-
         ['insert', 'find', 'remove'].forEach(function(method) {
-            NewSchema[method] = typeof DB[method] === 'function' ? DB[method](name) : function() {
+            NewSchema[method] = typeof useDb[method] === 'function' ? useDb[method](name) : function() {
                 return console.error('! No %s method defined for this DB driver.', method);
             };
         });

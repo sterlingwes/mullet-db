@@ -3,7 +3,7 @@ var _ = require('underscore')
   , nodeCrypto = require('crypto')
   , RSVP = require('rsvp');
 
-module.exports = function(db__DRIVER) {
+module.exports = function(db__DRIVER, config) {
     
     var DB = db__DRIVER
       , schemas = {};
@@ -17,21 +17,6 @@ module.exports = function(db__DRIVER) {
         this.checkSpec(spec);
         this.DB = useDb;
     }
-    
-    Schema.prototype.extendSpec = function(property, value) {
-        var spec = this.spec;
-        if(typeof property === 'string') {
-            var parts = property.split('.');
-            spec = parts.reduce(function(parent, part) {
-                if(!parent[part]) return
-                return parent[part];
-            }, spec);
-            if(!spec)   return console.error(' ! Schema.extendSpec() no %s property to extend', property);
-        }
-        
-        var val = typeof property === 'object' ? property : value || {};
-        _.extend(spec, val);
-    };
     
     Schema.prototype.checkSpec = function(spec) {
         this.spec = spec;
@@ -183,8 +168,8 @@ module.exports = function(db__DRIVER) {
      * returns a NewSchema prototype
      */
     function createSchema(name, spec) {
-        
-        var useDb = DB(spec.db || 'mullet');
+
+        var useDb = DB.open(spec.db || config.dbName);
         
         /*
          * NewSchema - prototype for our new collection
@@ -208,9 +193,11 @@ module.exports = function(db__DRIVER) {
         };
         
         NewSchema.prototype = new Schema(spec, useDb);
+        NewSchema.prototype.spec = spec;
         NewSchema.prototype.name = name;
         
         // define static methods
+        
         ['insert', 'find', 'remove'].forEach(function(method) {
             NewSchema[method] = typeof useDb[method] === 'function' ? useDb[method](name) : function() {
                 return console.error('! No %s method defined for this DB driver.', method);

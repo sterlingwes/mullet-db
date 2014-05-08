@@ -16,6 +16,7 @@ module.exports = function(db__DRIVER, config) {
     function Schema(spec, useDb) {
         this.checkSpec(spec);
         this.DB = useDb;
+        this.DB.wrapDriver(this); // link back so drivers can see spec
     }
     
     Schema.prototype.checkSpec = function(spec) {
@@ -198,7 +199,7 @@ module.exports = function(db__DRIVER, config) {
         
         // define static methods
         
-        ['insert', 'find', 'remove'].forEach(function(method) {
+        ['insert', 'update', 'find', 'remove'].forEach(function(method) {
             NewSchema[method] = typeof useDb[method] === 'function' ? useDb[method](name) : function() {
                 return console.error('! No %s method defined for this DB driver.', method);
             };

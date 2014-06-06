@@ -92,7 +92,7 @@ module.exports = function(db__DRIVER, config) {
         if(key)
             return this.fields[key];
         
-        return _.extend({ _id: this.id }, this.fields);
+        return _.extend({ _id: typeof this.id === 'object' ? this.id.toString() : this.id }, this.fields);
     };
     
     Schema.prototype.toSafe = function() {
@@ -147,14 +147,14 @@ module.exports = function(db__DRIVER, config) {
                 
                 if(_.isArray(res))  res = res[0];
                 
-                if(err) return reject(err);
+                if(err) reject(err);
                 else {
                     if(!existing && !this.id && res._id) {
                         this.id = res._id;
                     }
                     resolve(this);
                 }
-                if(typeof cb === 'function')    cb(err, existing ? res : this);
+                if(typeof cb === 'function')    cb(err, this.get());
                 
             }.bind(this));
         }.bind(this));
